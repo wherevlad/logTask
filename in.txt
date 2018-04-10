@@ -1,4 +1,4 @@
-7 13
+7 18
 a 1
 aa 1
 b 0
@@ -19,3 +19,8 @@ a = a
 a = a & 0
 a = a | 1
 llll = llll
+k1 = c
+k2 = e
+kk = k1 | k2
+n1 = n2 | b
+n2 = a & b

@@ -23,7 +23,7 @@ class log {
 		int N, M;
 
 		stack<string> steck;
-		list<char**> listCompoundNotPossible[2];
+		list<char**> listCompoundNotPossible;
 
 		stringstream *flowA;
 
@@ -37,7 +37,7 @@ class log {
 
 			a = new char** [N+M];
 			for(int i = 0; i < N+M; i++)
-				a[i] = new char* [3];
+				a[i] = new char* [5];
 
 			for(int i = 0; i < N; i++){
 				a[i][0] = new char [100];
@@ -49,10 +49,12 @@ class log {
 				a[i][0] = new char [100];
 				a[i][1] = new char [100];
 				a[i][2] = new char [100];
+				a[i][3] = new char [100];
+				a[i][4] = new char [100];
 				(*fin) >> a[i][0];
 				fin->ignore(255, '=');
 				fin->ignore(255, ' ');
-				fin->getline(a[i][1], 100);
+				fin->getline(a[i][2], 100);
 			}
 		}
 		~log(){
@@ -62,6 +64,10 @@ class log {
 				delete []a[i][0];
 				delete []a[i][1];
 				delete []a[i][2];
+				delete []a[i][3];
+
+				delete []a[i][4];
+
 				delete []a[i];
 			}
 			delete []a;
@@ -70,61 +76,101 @@ class log {
 		void writeMas(){
 			cout << N << " " << M << endl;
 			for(int i = 0; i < N+M; i++){
-				cout << a[i][0] << " " << a[i][1] << endl;
+				if(i >= N) cout << a[i][0] << " " << a[i][2] << endl;
+				else cout << a[i][0] << " " << a[i][1] << endl;
 			}
 		}
 
 		void VM(){
-			stack<string> steckUndefinedCompound;
-			string rez;
-			char rezInt1, rezInt2;
-			char otv;
-			int endWord;
-			string wordBuff;
 			stringstream simpleA, compoundA;
+			char **copyA;
 
 			for(int i = N; i < N+M; i++){
-				compoundA << a[i][1];
-				
-				while(compoundA >> wordBuff){
-					if(wordBuff == "&"){
-						compoundA >> wordBuff;
-
-						rezInt1 = nameSearch(steck.top());
-						rezInt2 = nameSearch(wordBuff);
-
-						if(rezInt1 != '?' && rezInt2 != '?')
-							rez = (int)rezInt1 & (int)rezInt2;
-						else{
-							rez = notPossible(rezInt1, '&', rezInt2);
-
-							//////////////////////////////////
-							//rez = "?";
-							//////////////////////////////////
-						}
-
-						steck.pop();
-						steck.push(rez);
-					}else if(wordBuff == "|"){
-						compoundA >> wordBuff;
-						rezInt2 = nameSearch(wordBuff);
-						rez = rezInt2;
-						steck.push(rez);
-					//}else if(wordBuff == "?"){
-
-					}else{
-						rezInt2 = nameSearch(wordBuff);
-						rez = rezInt2;
-						steck.push(rez);
-					}
-				}
-
+				compoundA << a[i][2];
+				logDecision(compoundA, i, false);
 				compoundA.clear();
 
-				a[i][2][0] = stackSum();
+				a[i][1][0] = stackSum();
+
+				if(!listCompoundNotPossible.empty()){
+					//for(int i = 0; i < listCompoundNotPossible[0].size(); i++){
+						//copyA = listCompoundNotPossible[0].front();
+						//compoundA << copyA[2];
+
+						//cout << endl << "*****************" << *copyA[1] << "******************" << listCompoundNotPossible[0].size() << endl;
+						//copyA[1] = (char*)"X";
+						//listCompoundNotPossible[0].pop_front();
+						//compoundA.clear();
+					//}
+					for(list<char**>::iterator begin = listCompoundNotPossible.begin(), end = listCompoundNotPossible.end(); begin != end; ++begin){
+
+						char**& element = *begin;
+
+						//cout << a[i][0] << "  " << element[3] << endl;
+
+						//if(a[i][0] == element[3]){
+						if(!strcmp(a[i][0], element[3])){
+							cout  << "*****************" << a[i][0] << "  " << element[3] << endl;
+							compoundA << element[2];
+							stringstream ss;
+							ss << element[4];
+							int j;
+							ss >> j;
+							logDecision(compoundA, i+1, true);
+							compoundA.clear();
+							a[j][1][0] = stackSum();
+							//cout  << "*****************" << a[i][0] << "  " << element[3] << endl;
+							//listCompoundNotPossible.erase(begin);
+							ss.clear();
+						}
+						//cout << element[3] << " " << listCompoundNotPossible.size() << endl;
+					}
+					//cout << endl;
+				}
 			}
 
 		}
+
+
+		char logDecision(stringstream &compoundA, int i, bool p){
+			string rez;
+			char rezInt1, rezInt2;
+			string wordBuff;
+				
+			while(compoundA >> wordBuff){
+				if(wordBuff == "&"){
+					compoundA >> wordBuff;
+
+					rezInt1 = nameSearch(steck.top(), i, p);
+					rezInt2 = nameSearch(wordBuff, i, p);
+
+					if(rezInt1 != '?' && rezInt2 != '?')
+						rez = (int)rezInt1 & (int)rezInt2;
+					else{
+						rez = notPossible(rezInt1, '&', rezInt2);
+
+						//////////////////////////////////
+						//rez = "?";
+						//////////////////////////////////
+					}
+
+					steck.pop();
+					steck.push(rez);
+				}else if(wordBuff == "|"){
+					compoundA >> wordBuff;
+					rezInt2 = nameSearch(wordBuff, i, p);
+					rez = rezInt2;
+					steck.push(rez);
+				//}else if(wordBuff == "?"){
+
+				}else{
+					rezInt2 = nameSearch(wordBuff, i, p);
+					rez = rezInt2;
+					steck.push(rez);
+				}
+			}
+		}
+
 
 		char stackSum(){
 			char sum = '0';
@@ -139,16 +185,17 @@ class log {
 					steck.pop();
 
 					//////////////////////////////////
-					listCompoundNotPossible[0].push_front(a[0]);
+
 					//////////////////////////////////
 				}
 			}
 			return sum;
 		}
-		char nameSearch(string nameS){
+		char nameSearch(string nameS, int i, bool p){
 			string rez;
 			char rezInt;
-			for(int j = 0; j < N; j++){
+			char *copyNameS;
+			for(int j = 0; j < i; j++){
 				if(nameS == "0" || nameS == "1"){
 					rez = nameS;
 					rezInt = *rez.c_str();
@@ -158,6 +205,16 @@ class log {
 					break;
 				}else if(j == N-1){
 					rezInt = '?';
+
+					//a[i][3] = &nameS[0u];
+					if(nameS != "?" && !p){
+						stringstream ss;
+						ss << i;
+						a[i][3] = strdup(nameS.c_str());
+						a[i][4] = strdup(ss.str().c_str());
+						listCompoundNotPossible.push_front(a[i]);
+						//listNameNotPossible.push_front(&nameS[0u])
+					}
 				}
 			}
 			return rezInt; 
@@ -174,12 +231,14 @@ class log {
 				else
 					return '?';
 			}
+		}
+		char notPossibleCompound(){
 
 		}
 
 		void printA(){
 			for(int i = N; i < N+M; i++)
-				cout << a[i][0] << " " << a[i][2] << "  " << a[i][1] << endl;;
+				cout << a[i][0] << " " << a[i][1] << "  " << a[i][2] << "  ||" << a[i][3] << "  //" << a[i][4] << endl;;
 		}
 };
 
