@@ -10,11 +10,6 @@
 
 using namespace std;
 
-struct element{
-	char *compoundName, *compoundExp, *unknownName;
-	element *next;
-};
-
 class log {
 	public:
 		ofstream *fout;
@@ -65,7 +60,6 @@ class log {
 				delete []a[i][1];
 				delete []a[i][2];
 				delete []a[i][3];
-
 				delete []a[i][4];
 
 				delete []a[i];
@@ -83,7 +77,6 @@ class log {
 
 		void VM(){
 			stringstream simpleA, compoundA;
-			char **copyA;
 
 			for(int i = N; i < N+M; i++){
 				compoundA << a[i][2];
@@ -93,24 +86,11 @@ class log {
 				a[i][1][0] = stackSum();
 
 				if(!listCompoundNotPossible.empty()){
-					//for(int i = 0; i < listCompoundNotPossible[0].size(); i++){
-						//copyA = listCompoundNotPossible[0].front();
-						//compoundA << copyA[2];
-
-						//cout << endl << "*****************" << *copyA[1] << "******************" << listCompoundNotPossible[0].size() << endl;
-						//copyA[1] = (char*)"X";
-						//listCompoundNotPossible[0].pop_front();
-						//compoundA.clear();
-					//}
 					for(list<char**>::iterator begin = listCompoundNotPossible.begin(), end = listCompoundNotPossible.end(); begin != end; ++begin){
 
 						char**& element = *begin;
 
-						//cout << a[i][0] << "  " << element[3] << endl;
-
-						//if(a[i][0] == element[3]){
 						if(!strcmp(a[i][0], element[3])){
-							cout  << "*****************" << a[i][0] << "  " << element[3] << endl;
 							compoundA << element[2];
 							stringstream ss;
 							ss << element[4];
@@ -119,13 +99,12 @@ class log {
 							logDecision(compoundA, i+1, true);
 							compoundA.clear();
 							a[j][1][0] = stackSum();
-							//cout  << "*****************" << a[i][0] << "  " << element[3] << endl;
-							//listCompoundNotPossible.erase(begin);
+							if(a[j][1][0] != '?'){
+								begin = listCompoundNotPossible.erase(begin);
+							}
 							ss.clear();
 						}
-						//cout << element[3] << " " << listCompoundNotPossible.size() << endl;
 					}
-					//cout << endl;
 				}
 			}
 
@@ -148,10 +127,6 @@ class log {
 						rez = (int)rezInt1 & (int)rezInt2;
 					else{
 						rez = notPossible(rezInt1, '&', rezInt2);
-
-						//////////////////////////////////
-						//rez = "?";
-						//////////////////////////////////
 					}
 
 					steck.pop();
@@ -183,10 +158,6 @@ class log {
 				}else{
 					sum = (int)notPossible(sum, '|', rez[0]);
 					steck.pop();
-
-					//////////////////////////////////
-
-					//////////////////////////////////
 				}
 			}
 			return sum;
@@ -203,17 +174,15 @@ class log {
 				}else if(a[j][0] == nameS){
 					rezInt = a[j][1][0];
 					break;
-				}else if(j == N-1){
+				}else if(j == i-1){
 					rezInt = '?';
 
-					//a[i][3] = &nameS[0u];
 					if(nameS != "?" && !p){
 						stringstream ss;
 						ss << i;
 						a[i][3] = strdup(nameS.c_str());
 						a[i][4] = strdup(ss.str().c_str());
 						listCompoundNotPossible.push_front(a[i]);
-						//listNameNotPossible.push_front(&nameS[0u])
 					}
 				}
 			}
@@ -232,13 +201,21 @@ class log {
 					return '?';
 			}
 		}
-		char notPossibleCompound(){
-
-		}
-
 		void printA(){
 			for(int i = N; i < N+M; i++)
-				cout << a[i][0] << " " << a[i][1] << "  " << a[i][2] << "  ||" << a[i][3] << "  //" << a[i][4] << endl;;
+				cout << a[i][0] << " " << a[i][1] << endl;;
+		}
+		void printList(){
+			for(list<char**>::iterator begin = listCompoundNotPossible.begin(), end = listCompoundNotPossible.end(); begin != end; ++begin){
+				char**& element = *begin;
+
+				cout << element[0] << endl;
+			}
+		}
+		void outFile(){
+			for(int i = N; i < N+M; i++){
+				(*fout) << a[i][1] << endl;
+			}
 		}
 };
 
@@ -248,11 +225,11 @@ int main(){
 	log *a;
 	char *strFout = new char(20);
 	char *strFin = new char(20);
-	//cin >> strFout;
+	cin >> strFout;
 	//strFout = (char*)"hoho.txt";
 	//strFin = (char*)"hoh.txt";
-	//cin >> strFin;
-	a = new log();
+	cin >> strFin;
+	a = new log(strFout, strFin);
 
 	a->writeMas();
 
@@ -263,6 +240,8 @@ int main(){
 	cout << "_______________" << endl;
 
 	a->printA();
+
+	a->outFile();
 
 	return 0;
 }
